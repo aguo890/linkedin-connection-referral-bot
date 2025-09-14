@@ -118,15 +118,25 @@ async def company_search(page: Page, COMPANY_TO_SEARCH: str):
     print("Found Company...")
     await page.wait_for_timeout(3000) 
 
-async def people_search(page: Page):
-    await page.wait_for_timeout(3000) 
-    print("Searching for people.....")
-    
-    await page.get_by_role("button", name="Show all filters. Clicking" , exact=True).click()
 
-    await page.get_by_role("button", name="Apply current filters to show" , exact=True).click()
+
+
+async def people_search(page: Page):
+
+    print("Searching for people.....")
+
+    print("Demonstration finished. Keeping browser open...")
+
+    all_filters_button = page.get_by_role("button", name="All filters")
+    await expect(all_filters_button).to_be_visible(timeout=3000)
+
+    await all_filters_button.click()
+    await page.get_by_role("button", name="1st", exact=True).click()
+
+    await page.get_by_role("button", name="Apply current filters to show results", exact=True).click()
 
     print ("applying People Filters.....")
+    await page.wait_for_timeout(3000) 
 
     person_found= await page.locator("a[role= 'link']").all()
 
