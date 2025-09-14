@@ -138,22 +138,34 @@ async def people_search(page: Page):
     print ("applying People Filters.....")
     await page.wait_for_timeout(3000) 
 
-    person_found= await page.locator("a[role= 'link']").all()
+    results = []
+    # The presence indicator is inside the profile card div. Let's get all such cards:
+    profile_cards = await page.locator('div.presence-entity--size-3').all()
 
-    print ("Person found....")
+    for card in profile_cards:
+        try:
+            # Get the name from the alt text of the profile image
+            img = card.locator('img.presence-entity__image')
+            name = await img.get_attribute('alt')
+            
+            # Optionally, you can check for status span text if you want to filter further
+            span = card.locator('span.visually-hidden')
+            if await span.inner_text() and "Status" in await span.inner_text():
+                results.append(name)
+        except Exception:
+            continue
 
-    return person_found
+    print("Profiles with Status found....")
+    print(results)
+
+    return results  # List of (name, link) tuples
+
     
 
-async def message_person(person_found,page: Page):
-    for link in person_found:
-
-        label = await link.get_attribute("aria-label")
-        
-        if label and label.startswith("Message"):
-            print(f"Clicking message button for: {label}")
-            await link.click()
-            await page.wait_for_timeout(2000)
+async def message_person(people_with_status, page: Page):
+    for name, link in people_with_status:
+        print(f"Ready to process: {name}")
+        # (Do something with link)
     #await page.get_by_role("button", name="Message Jay Zhu").click()
 
 
@@ -176,7 +188,6 @@ async def main_demonstration():
 
         person_found = await people_search(page)      
 
-        print("person Found....")  
         await message_person(person_found, page)
 
 
