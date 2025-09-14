@@ -81,15 +81,16 @@ async def login(page: Page, email: str, password: str) -> bool:
         # --- END OF FIX ---
 
         print("INFO: Clicking 'Sign in'...")
-        await page.get_by_role("button", name="Sign in").click()
+        await page.get_by_role("button", name="Sign in", exact=True).click()
 
         # Wait for the main feed to load to confirm success
         print("INFO: Waiting for login confirmation...")
-        me_avatar = page.locator("button.global-nav__primary-link-me-container")
-        await expect(me_avatar).to_be_visible(timeout=60000)
+        messaging_link = page.get_by_role("link", name="Messaging")
+        await expect(messaging_link).to_be_visible(timeout=60000)
 
         print("SUCCESS: Login successful!")
         return True
+
 
     except Exception as e:
         print(f"ERROR: Login attempt failed.")
@@ -102,6 +103,48 @@ async def login(page: Page, email: str, password: str) -> bool:
 
         await page.pause()
         return False
+
+
+#------SEARCHING FOR THE COMPANY-------
+async def company_search(page: Page, COMPANY_TO_SEARCH: str):
+
+    print("Searching for People to connect ")
+    await page.get_by_role("combobox", name="Search", exact=True).click()
+    
+    print(f"INFO: Filling out company: {COMPANY_TO_SEARCH}")
+    await page.get_by_role("combobox", name="Search").fill(COMPANY_TO_SEARCH)
+    await page.keyboard.press("Enter")
+    
+    print("Found Company...")
+    await page.wait_for_timeout(3000) 
+
+async def people_search(page: Page):
+    await page.wait_for_timeout(3000) 
+    print("Searching for people.....")
+    
+    await page.get_by_role("button", name="Show all filters. Clicking" , exact=True).click()
+
+    await page.get_by_role("button", name="Apply current filters to show" , exact=True).click()
+
+    print ("applying People Filters.....")
+
+    person_found= await page.locator("a[role= 'link']").all()
+
+    print ("Person found....")
+
+    return person_found
+    
+
+async def message_person(person_found,page: Page):
+    for link in person_found:
+
+        label = await link.get_attribute("aria-label")
+        
+        if label and label.startswith("Message"):
+            print(f"Clicking message button for: {label}")
+            await link.click()
+            await page.wait_for_timeout(2000)
+    #await page.get_by_role("button", name="Message Jay Zhu").click()
 
 
 # --- DEMONSTRATION OF HOW TO USE THE FUNCTIONS ---
@@ -118,6 +161,14 @@ async def main_demonstration():
             await login(page, LINKEDIN_EMAIL, LINKEDIN_PASSWORD)
         else:
             print("User is already logged in. No action needed.")
+        await company_search(page, COMPANY_TO_SEARCH)
+        print ("Company search completed")
+
+        person_found = await people_search(page)      
+
+        print("person Found....")  
+        await message_person(person_found, page)
+
 
         print("Demonstration finished. Keeping browser open...")
         await page.pause()
