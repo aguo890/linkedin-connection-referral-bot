@@ -118,6 +118,11 @@ async def company_search(page: Page, COMPANY_TO_SEARCH: str):
     print("Found Company...")
     await page.wait_for_timeout(3000) 
 
+async def people_message(page: Page, person):
+    name1= "Message "+person
+    await page.get_by_role("button", name=name1, exact = True).click()
+
+
 
 
 
@@ -186,10 +191,17 @@ async def main_demonstration():
         await company_search(page, COMPANY_TO_SEARCH)
         print ("Company search completed")
 
-        person_found = await people_search(page)      
+        person_found = await people_search(page)   
+        
+        for person in person_found:
+            await people_message(page, person)
+            print("Demonstration finished. Keeping browser open...")
+            await page.pause()
+            await browser.close()
 
-        await message_person(person_found, page)
-
+        print("Demonstration finished. Keeping browser open...")
+        await page.pause()
+        await browser.close()   
 
         print("Demonstration finished. Keeping browser open...")
         await page.pause()
